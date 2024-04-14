@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 public class BungeeLoadBalancer extends Plugin {
-    private final boolean newer = AsyncEvent.class.isAssignableFrom(PostLoginEvent.class);
+    private static final boolean POSTLOGINEVENT_CHANGE = AsyncEvent.class.isAssignableFrom(PostLoginEvent.class);
     private ServerPickingStrategyRegistry strategyRegistry;
     private ServerPickingStrategy defaultStrategy;
     private Configuration configuration;
@@ -32,8 +32,9 @@ public class BungeeLoadBalancer extends Plugin {
         this.initCommands();
     }
 
+    // To check if the player is on the latest version of BungeeCord with the PostLoginEvent Commit
     public boolean isNewer() {
-        return this.newer;
+        return POSTLOGINEVENT_CHANGE;
     }
 
     public Configuration getConfiguration() {

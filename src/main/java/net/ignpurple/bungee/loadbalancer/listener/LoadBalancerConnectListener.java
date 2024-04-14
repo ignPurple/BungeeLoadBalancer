@@ -21,7 +21,8 @@ public class LoadBalancerConnectListener implements Listener {
 
         final ProxyServer server = ProxyServer.getInstance();
         server.getPluginManager().registerListener(this.plugin, this);
-        server.getLogger().log(Level.INFO, "[ BUNGEELOADBALANCER ] It is recommended to upgrade to the latest version of BungeeCord for BungeeLoadBalancer to function properly.");
+
+        this.plugin.getLogger().log(Level.INFO, "It is recommended to upgrade to the latest version of BungeeCord for BungeeLoadBalancer to function properly.");
     }
 
     @EventHandler
