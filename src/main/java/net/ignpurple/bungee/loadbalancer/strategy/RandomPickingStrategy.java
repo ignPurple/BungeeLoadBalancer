@@ -14,6 +14,10 @@ public class RandomPickingStrategy extends AbstractServerPickingStrategy {
     public CompletableFuture<ServerInfo> getTargetServer(ProxiedPlayer player) {
         return this.createFuture(() -> {
             final List<ServerInfo> availableServers = this.getAvailableServers(player);
+            if (availableServers.size() == 0) {
+                return null;
+            }
+
             return availableServers.get(ThreadLocalRandom.current().nextInt(availableServers.size()));
         });
     }
