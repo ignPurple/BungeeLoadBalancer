@@ -29,6 +29,9 @@ public class LoadBalancerLoginListener implements Listener {
 
                 event.setTarget(serverInfo);
                 event.completeIntent(this.plugin);
-            });
+            }).exceptionally((exception) -> {
+                exception.printStackTrace();
+                return null;
+            });;
     }
 }

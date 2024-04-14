@@ -40,6 +40,9 @@ public class LoadBalancerConnectListener implements Listener {
                 }
 
                 event.setTarget(serverInfo);
+            }).exceptionally((exception) -> {
+                exception.printStackTrace();
+                return null;
             });
     }
 }
