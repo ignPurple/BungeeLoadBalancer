@@ -1,11 +1,12 @@
 # |---------------------------------|
-# |      Bungee Hub Randomizer      |
+# |      Bungee Load Balancer       |
 # |---------------------------------|
 #
 # Settings
 # strategy:
 #    - random        - Send the player to a completely random server
-#    - least-players - Send the player to the server with the least amount of players
+#    - least-players - Send the player to the server with the least amount of players (Excluding offline servers)
+#    - most-players  - Send the player to the server with the most amount of players (Excluding offline/full servers)
 #
 # servers:
 #   - The list of all the available servers to connect the players to

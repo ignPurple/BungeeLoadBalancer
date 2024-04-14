@@ -1,9 +1,9 @@
-package net.ignpurple.bungee.hubrandomizer;
+package net.ignpurple.bungee.loadbalancer;
 
-import net.ignpurple.bungee.hubrandomizer.command.HubRandomizerCommand;
-import net.ignpurple.bungee.hubrandomizer.listener.JoinListener;
-import net.ignpurple.bungee.hubrandomizer.strategy.RandomStrategy;
-import net.ignpurple.bungee.hubrandomizer.strategy.Strategy;
+import net.ignpurple.api.loadbalancer.strategy.ServerPickingStrategy;
+import net.ignpurple.bungee.loadbalancer.command.LoadBalancerCommand;
+import net.ignpurple.bungee.loadbalancer.listener.LoadBalancerConnectListener;
+import net.ignpurple.bungee.loadbalancer.strategy.registry.ServerPickingStrategyRegistry;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.event.AsyncEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
@@ -15,16 +15,19 @@ import net.md_5.bungee.config.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Locale;
 
-public class BungeeHubRandomizer extends Plugin {
+public class BungeeLoadBalancer extends Plugin {
     private final boolean newer = AsyncEvent.class.isAssignableFrom(PostLoginEvent.class);
+    private ServerPickingStrategyRegistry strategyRegistry;
+    private ServerPickingStrategy defaultStrategy;
     private Configuration configuration;
-    private RandomStrategy strategy;
+
+    public void onLoad() {
+        this.initRegistries();
+    }
 
     public void onEnable() {
         this.initConfig();
-        this.initStrategy();
         this.initListeners();
         this.initCommands();
     }
@@ -37,13 +40,28 @@ public class BungeeHubRandomizer extends Plugin {
         return this.configuration;
     }
 
-    public RandomStrategy getStrategy() {
-        return this.strategy;
+    public ServerPickingStrategyRegistry getStrategyRegistry() {
+        return this.strategyRegistry;
     }
+
+    public ServerPickingStrategy getDefaultStrategy() {
+        return this.defaultStrategy;
+    }
+
+    /**
+     * Configuration
+     */
 
     public void reloadConfig() {
         this.initConfig();
-        this.initStrategy();
+    }
+
+    /**
+     * Initialization
+     */
+
+    private void initRegistries() {
+        this.strategyRegistry = new ServerPickingStrategyRegistry();
     }
 
     private void initConfig() {
@@ -58,22 +76,18 @@ public class BungeeHubRandomizer extends Plugin {
                 .getProvider(YamlConfiguration.class)
                 .load(file);
 
+            this.defaultStrategy = this.strategyRegistry.getStrategy(this.configuration.getString("strategy"));
+
         } catch (IOException exception) {
             exception.printStackTrace();
         }
     }
 
-    private void initStrategy() {
-        final String strategyEnumName = this.configuration.getString("strategy").replace("-", "_").toUpperCase(Locale.ROOT);
-        final Strategy strategy = Strategy.valueOf(strategyEnumName);
-        this.strategy = strategy.instantiate(this);
-    }
-
     private void initListeners() {
-        new JoinListener(this);
+        new LoadBalancerConnectListener(this);
     }
 
     private void initCommands() {
-        ProxyServer.getInstance().getPluginManager().registerCommand(this, new HubRandomizerCommand(this));
+        ProxyServer.getInstance().getPluginManager().registerCommand(this, new LoadBalancerCommand(this));
     }
 }

@@ -1,6 +1,6 @@
-package net.ignpurple.bungee.hubrandomizer.strategy;
+package net.ignpurple.api.loadbalancer.strategy;
 
-import net.ignpurple.bungee.hubrandomizer.BungeeHubRandomizer;
+import net.ignpurple.bungee.loadbalancer.BungeeLoadBalancer;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -8,20 +8,19 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-public abstract class RandomStrategy {
-    private final BungeeHubRandomizer plugin;
+public abstract class AbstractServerPickingStrategy implements ServerPickingStrategy {
+    protected final BungeeLoadBalancer plugin;
 
-    public RandomStrategy(BungeeHubRandomizer plugin) {
-        this.plugin = plugin;
+    public AbstractServerPickingStrategy() {
+        this.plugin = (BungeeLoadBalancer) ProxyServer.getInstance().getPluginManager().getPlugin("BungeeLoadBalancer");
     }
 
-    public abstract void getRandomServer(ProxiedPlayer player, Consumer<ServerInfo> serverInfoCallback);
-
-    protected void getAvailableServers(ProxiedPlayer player, Consumer<List<ServerInfo>> serverInfoCallback) {
+    protected List<ServerInfo> getAvailableServers(ProxiedPlayer player) {
         final boolean newer = this.plugin.isNewer();
         final List<ServerInfo> servers = new ArrayList<>();
         final List<String> serverIds = this.plugin.getConfiguration().getStringList("servers");
@@ -34,7 +33,7 @@ public abstract class RandomStrategy {
             }
 
             if (newer) {
-                this.newerPingLatch(countDownLatch, serverInfo, servers);
+                this.newerBungeePingLatch(countDownLatch, serverInfo, servers);
                 continue;
             }
 
@@ -46,15 +45,22 @@ public abstract class RandomStrategy {
             try {
                 countDownLatch.await(250, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
-                serverInfoCallback.accept(Collections.emptyList());
-                throw new RuntimeException(e);
+                return Collections.emptyList();
             }
         }
 
-        serverInfoCallback.accept(servers);
+        return servers;
     }
 
-    private void newerPingLatch(CountDownLatch latch, ServerInfo serverInfo, List<ServerInfo> servers) {
+    protected CompletableFuture<ServerInfo> createFuture(Supplier<ServerInfo> serverInfoSupplier) {
+        if (this.plugin.isNewer()) {
+            return CompletableFuture.supplyAsync(serverInfoSupplier, this.plugin.getExecutorService());
+        }
+
+        return CompletableFuture.completedFuture(serverInfoSupplier.get());
+    }
+
+    private void newerBungeePingLatch(CountDownLatch latch, ServerInfo serverInfo, List<ServerInfo> servers) {
         serverInfo.ping((ping, err) -> {
             latch.countDown();
             if (err != null) {
