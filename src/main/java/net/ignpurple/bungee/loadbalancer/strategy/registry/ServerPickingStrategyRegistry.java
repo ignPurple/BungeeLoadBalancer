@@ -1,9 +1,11 @@
 package net.ignpurple.bungee.loadbalancer.strategy.registry;
 
+import com.google.common.base.Preconditions;
 import net.ignpurple.api.loadbalancer.strategy.ServerPickingStrategy;
 import net.ignpurple.api.loadbalancer.strategy.comparator.ServerInfoComparators;
 import net.ignpurple.bungee.loadbalancer.strategy.ComparatorPickingStrategy;
 import net.ignpurple.bungee.loadbalancer.strategy.RandomPickingStrategy;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Locale;
 import java.util.Map;
@@ -17,7 +19,9 @@ public class ServerPickingStrategyRegistry {
         this.registerDefaults();
     }
 
-    public ServerPickingStrategy getStrategy(String id) {
+    public ServerPickingStrategy getStrategy(@NonNull String id) {
+        Preconditions.checkNotNull(id, "The id provided in getStrategy may not be null");
+
         final String formattedId = this.formatId(id);
         final ServerPickingStrategy strategy = this.strategies.get(formattedId);
         if (strategy == null) {
@@ -27,7 +31,10 @@ public class ServerPickingStrategyRegistry {
         return strategy;
     }
 
-    public void register(String id, ServerPickingStrategy strategy) {
+    public void register(@NonNull String id, @NonNull ServerPickingStrategy strategy) {
+        Preconditions.checkNotNull(id, "The id provided in register may not be null");
+        Preconditions.checkNotNull(strategy, "The strategy provided in register may not be null");
+
         final String formattedId = this.formatId(id);
         final ServerPickingStrategy existingStrategy = this.strategies.putIfAbsent(formattedId, strategy);
         if (existingStrategy != null) {
