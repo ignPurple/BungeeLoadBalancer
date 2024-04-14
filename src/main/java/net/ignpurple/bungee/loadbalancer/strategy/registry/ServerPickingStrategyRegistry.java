@@ -19,20 +19,20 @@ public class ServerPickingStrategyRegistry {
 
     public ServerPickingStrategy getStrategy(String id) {
         final String formattedId = this.formatId(id);
-        if (!this.strategies.containsKey(formattedId)) {
+        final ServerPickingStrategy strategy = this.strategies.get(formattedId);
+        if (strategy == null) {
             throw new IllegalArgumentException("The Registered Strategies does not contain a strategy for id (" + id + ")");
         }
 
-        return this.strategies.get(formattedId);
+        return strategy;
     }
 
     public void register(String id, ServerPickingStrategy strategy) {
         final String formattedId = this.formatId(id);
-        if (this.strategies.containsKey(formattedId)) {
+        final ServerPickingStrategy existingStrategy = this.strategies.putIfAbsent(formattedId, strategy);
+        if (existingStrategy != null) {
             throw new IllegalArgumentException("The Registered Strategies already contains a value with id (" + id + ")");
         }
-
-        this.strategies.put(formattedId, strategy);
     }
 
     private String formatId(String id) {
