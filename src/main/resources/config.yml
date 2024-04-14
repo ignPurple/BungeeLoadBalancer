@@ -1,0 +1,17 @@
+# |---------------------------------|
+# |      Bungee Hub Randomizer      |
+# |---------------------------------|
+#
+# Settings
+# strategy:
+#    - random        - Send the player to a completely random server
+#    - least-players - Send the player to the server with the least amount of players
+#
+# servers:
+#   - The list of all the available servers to connect the players to
+
+strategy: "random"
+
+servers:
+  - "hub1"
+  - "hub2"

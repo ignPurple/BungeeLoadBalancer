@@ -1,0 +1,3 @@
+name: BungeeHubRandomizer
+version: "1.0"
+main: net.ignpurple.bungee.hubrandomizer.BungeeHubRandomizer
