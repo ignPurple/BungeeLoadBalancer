@@ -3,6 +3,7 @@ package net.ignpurple.bungee.loadbalancer;
 import net.ignpurple.api.loadbalancer.strategy.ServerPickingStrategy;
 import net.ignpurple.bungee.loadbalancer.command.LoadBalancerCommand;
 import net.ignpurple.bungee.loadbalancer.listener.LoadBalancerConnectListener;
+import net.ignpurple.bungee.loadbalancer.metric.Metrics;
 import net.ignpurple.bungee.loadbalancer.strategy.registry.ServerPickingStrategyRegistry;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.event.AsyncEvent;
@@ -21,15 +22,23 @@ public class BungeeLoadBalancer extends Plugin {
     private ServerPickingStrategyRegistry strategyRegistry;
     private ServerPickingStrategy defaultStrategy;
     private Configuration configuration;
+    private Metrics metrics;
 
     public void onLoad() {
         this.initRegistries();
     }
 
+    @Override
     public void onEnable() {
         this.initConfig();
         this.initListeners();
         this.initCommands();
+        this.initMetrics();
+    }
+
+    @Override
+    public void onDisable() {
+        this.metrics.shutdown();
     }
 
     // To check if the player is on the latest version of BungeeCord with the PostLoginEvent Commit
@@ -90,5 +99,9 @@ public class BungeeLoadBalancer extends Plugin {
 
     private void initCommands() {
         ProxyServer.getInstance().getPluginManager().registerCommand(this, new LoadBalancerCommand(this));
+    }
+
+    private void initMetrics() {
+        this.metrics = new Metrics(this, 21610);
     }
 }
