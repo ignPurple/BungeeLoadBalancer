@@ -10,9 +10,21 @@
 #
 # servers:
 #   - The list of all the available servers to connect the players to
+#
+# hub-command-enabled: true/false
+#  - To disable or enable the hub command provided by the loadbalancer.
+#
+# hub-command-aliases:
+#   - The list of all the aliases for the /hub command
+# NOTE: Requires a restart to apply the alias changes
+#
 
 strategy: "random"
 
 servers:
   - "hub1"
   - "hub2"
+
+hub-command-enabled: true
+hub-command-aliases:
+  - "lobby"

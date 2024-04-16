@@ -1,6 +1,7 @@
 package net.ignpurple.bungee.loadbalancer;
 
 import net.ignpurple.api.loadbalancer.strategy.ServerPickingStrategy;
+import net.ignpurple.bungee.loadbalancer.command.HubCommand;
 import net.ignpurple.bungee.loadbalancer.command.LoadBalancerCommand;
 import net.ignpurple.bungee.loadbalancer.listener.LoadBalancerConnectListener;
 import net.ignpurple.bungee.loadbalancer.metric.Metrics;
@@ -9,6 +10,7 @@ import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.event.AsyncEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.api.plugin.PluginManager;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
@@ -98,7 +100,12 @@ public class BungeeLoadBalancer extends Plugin {
     }
 
     private void initCommands() {
-        ProxyServer.getInstance().getPluginManager().registerCommand(this, new LoadBalancerCommand(this));
+        final PluginManager pluginManager = ProxyServer.getInstance().getPluginManager();
+        pluginManager.registerCommand(this, new LoadBalancerCommand(this));
+
+        if (this.configuration.getBoolean("hub-command-enabled")) {
+            pluginManager.registerCommand(this, new HubCommand(this));
+        }
     }
 
     private void initMetrics() {

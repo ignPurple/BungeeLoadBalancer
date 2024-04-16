@@ -10,7 +10,7 @@ public class LoadBalancerCommand extends Command {
     private final BungeeLoadBalancer plugin;
 
     public LoadBalancerCommand(BungeeLoadBalancer plugin) {
-        super("loadbalancer", "loadbalancer.use");
+        super("loadbalancer", "loadbalancer.admin");
 
         this.plugin = plugin;
     }
