@@ -10,14 +10,14 @@ public class LoadBalancerCommand extends Command {
     private final BungeeLoadBalancer plugin;
 
     public LoadBalancerCommand(BungeeLoadBalancer plugin) {
-        super("loadbalancer", "loadbalancer.admin");
+        super("loadbalancer", "loadbalancer.admin", "randomhub", "bungeeloadbalancer");
 
         this.plugin = plugin;
     }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (args.length != 1 || args[0].equalsIgnoreCase("reload")) {
+        if (args.length != 1 || !args[0].equalsIgnoreCase("reload")) {
             final TextComponent usage = new TextComponent("Usage: /loadbalancer reload");
             usage.setColor(ChatColor.RED);
 
@@ -32,4 +32,5 @@ public class LoadBalancerCommand extends Command {
 
         sender.sendMessage(reloadedComponent);
     }
+
 }

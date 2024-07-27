@@ -5,9 +5,7 @@ import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -21,27 +19,33 @@ public abstract class AbstractServerPickingStrategy implements ServerPickingStra
     }
 
     protected List<ServerInfo> getAvailableServers(ProxiedPlayer player) {
-        final boolean newer = this.plugin.isNewer();
+        final boolean newProxy = this.plugin.isNewer();
         final List<ServerInfo> servers = new ArrayList<>();
         final List<String> serverIds = this.plugin.getConfiguration().getStringList("servers");
         final CountDownLatch countDownLatch = new CountDownLatch(serverIds.size());
         for (final String serverId : serverIds) {
-            final ServerInfo serverInfo = ProxyServer.getInstance().getServerInfo(serverId);
-            if (!serverInfo.canAccess(player)) {
-                countDownLatch.countDown();
+            if (!serverId.startsWith("[") || !serverId.endsWith("]")) {
+                final ServerInfo serverInfo = ProxyServer.getInstance().getServerInfo(serverId);
+                this.determineServer(countDownLatch, player, serverInfo, servers, newProxy);
                 continue;
             }
 
-            if (newer) {
-                this.newerBungeePingLatch(countDownLatch, serverInfo, servers);
-                continue;
-            }
+            final String replacedId = serverId.replace("[", "").replace("]", "").toLowerCase(Locale.ROOT);
+            servers.addAll(ProxyServer.getInstance().getServers()
+                .entrySet()
+                .stream()
+                .filter((entry) -> entry.getKey().startsWith(replacedId))
+                .filter((entry) -> {
+                    final int originalSize = servers.size();
+                    this.determineServer(null, player, entry.getValue(), servers, newProxy);
+                    return servers.size() > originalSize;
+                }).map(Map.Entry::getValue)
+                .toList());
 
-            servers.add(serverInfo);
             countDownLatch.countDown();
         }
 
-        if (newer) {
+        if (newProxy) {
             try {
                 countDownLatch.await(250, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
@@ -60,14 +64,48 @@ public abstract class AbstractServerPickingStrategy implements ServerPickingStra
         return CompletableFuture.completedFuture(serverInfoSupplier.get());
     }
 
-    private void newerBungeePingLatch(CountDownLatch latch, ServerInfo serverInfo, List<ServerInfo> servers) {
-        serverInfo.ping((ping, err) -> {
+    private void determineServer(CountDownLatch latch, ProxiedPlayer player, ServerInfo serverInfo, List<ServerInfo> servers, boolean newProxy) {
+        if (!serverInfo.canAccess(player)) {
+            if (latch == null) {
+                return;
+            }
+
             latch.countDown();
+            return;
+        }
+
+        if (newProxy) {
+            this.newerBungeePingLatch(latch, serverInfo, servers);
+            return;
+        }
+
+        servers.add(serverInfo);
+        if (latch == null) {
+            return;
+        }
+
+        latch.countDown();
+    }
+
+    private void newerBungeePingLatch(CountDownLatch latch, ServerInfo serverInfo, List<ServerInfo> servers) {
+        final CountDownLatch pingLatch = new CountDownLatch(1);
+        serverInfo.ping((ping, err) -> {
+            pingLatch.countDown();
+            if (latch != null) {
+                latch.countDown();
+            }
+
             if (err != null) {
                 return;
             }
 
             servers.add(serverInfo);
         });
+
+        try {
+            pingLatch.await(150, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

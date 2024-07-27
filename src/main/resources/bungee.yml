@@ -1,3 +1,4 @@
 name: BungeeLoadBalancer
 version: "1.0"
+author: ignPurple
 main: net.ignpurple.bungee.loadbalancer.BungeeLoadBalancer
